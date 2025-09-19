@@ -1,0 +1,26 @@
+# Local .terraform directories
+**/.terraform/*   
+
+# Lock file (commit if working in team, else ignore)
+**/.terraform.lock.hcl
+
+# State files (sensitive!)
+*.tfstate
+*.tfstate.*
+*.tfvars
+*.tfvars.json
+
+# Crash logs
+crash.log
+crash.*.log
+ 
+# Override files (used for local testing)
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# CLI configuration files
+.terraformrc
+terraform.rc
+
