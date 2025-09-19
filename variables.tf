@@ -70,7 +70,7 @@ variable "cloudfront_price_class" {
 variable "enable_access_logging" {
   description = "Enable s3 bucket logging"
   type        = bool
-
+  default = false
 
 }
 
