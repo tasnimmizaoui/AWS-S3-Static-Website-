@@ -132,7 +132,7 @@ resource "aws_s3_bucket_policy" "public_read" {
 
 # Cloud Front ditribution 
 resource "aws_cloudfront_origin_access_control" "website" {
-  count = var.enbale_cloudfront ? 1 : 0
+  count = var.enable_cloudfront ? 1 : 0
   name = "${local.bucket_name}-oac"
   description = "OAC for ${local.bucket_name}"
   origin_access_control_origin_type = "s3"
@@ -215,3 +215,22 @@ resource "random_pet" "suffix" {
   separator = "-"
 }
 
+
+ #  Monitoring and logging : 
+ # User Request → Source Bucket (website) → Access Log → Target Bucket (access-logs)
+resource "aws_s3_bucket_logging" "website" {
+  count =  var.enable_access_logging ? 1 : 0
+  bucket = aws_s3_bucket.website.id
+  target_bucket = aws_s3_bucket.access_logs[0].id
+  target_prefix = "access-logs/"
+}
+
+resource "aws_s3_bucket" "access_logs" {
+  count = var.enable_access_logging ? 1 : 0
+  bucket = "${local.bucket_name}-access-logs"
+  force_destroy = var.force_destroy_bucket
+
+  tags = merge(local.common_tags, {
+    Purpose = "AccessLogs"
+  })
+}

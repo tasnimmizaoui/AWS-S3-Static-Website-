@@ -22,13 +22,8 @@ variable "owner" {
   default     = "Devops Team "
   
 }
-variable "enable_cloudfront" {
-   # To fill 
-}
 
-variable "cloudfront_price_class" {
-   # To fill 
-}
+
 
 variable "index_document" {
   description = "Default index page"
@@ -60,9 +55,42 @@ variable "enable_lifecycle_rules" {
   
 }
 # CloudFront configuration 
-variable "enbale_cloudfront" {
+variable "enable_cloudfront" {
   description = "Enable CloudFront "
   type = bool
   default = true 
 }
+variable "cloudfront_price_class" {
+   description = " Cloudfront  price class " 
+    type        = string
+   default     = "PriceClass_100"
+}
 
+# Logging and monitoring 
+variable "enable_access_logging" {
+  description = "Enable s3 bucket logging"
+  type = bool
+
+  
+}
+
+# MONITORING AND ALERTS
+# ================================================
+variable "enable_monitoring" {
+  description = "Enable CloudWatch monitoring and alarms"
+  type        = bool
+  default     = false
+}
+
+variable "alert_email" {
+  description = "Email address for CloudWatch alarms"
+  type        = string
+  default     = ""
+}
+
+# Other config 
+variable "enable_compression" {
+  description = "Enable gzip compression for text files"
+  type        = bool
+  default     = true
+}
