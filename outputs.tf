@@ -51,7 +51,7 @@ output "cloudfront_url" {
 
 output "website_url" {
   description = "The main website URL (custom domain or CloudFront)"
-  value = var.enable_cloudfront ? "https://${aws_cloudfront_distribution.website[0].domain_name}" : "http://${aws_s3_bucket_website_configuration.website.website_endpoint}"
+  value       = var.enable_cloudfront ? "https://${aws_cloudfront_distribution.website[0].domain_name}" : "http://${aws_s3_bucket_website_configuration.website.website_endpoint}"
 
 }
 
@@ -60,13 +60,13 @@ output "website_url" {
 output "deployment_info" {
   description = "Deployment information summary"
   value = {
-    project_name   = var.project_name
-    environment    = var.environment
-    bucket_name    = aws_s3_bucket.website.id
-    region         = data.aws_region.current.name
-    account_id     = data.aws_caller_identity.current.account_id
+    project_name       = var.project_name
+    environment        = var.environment
+    bucket_name        = aws_s3_bucket.website.id
+    region             = data.aws_region.current.name
+    account_id         = data.aws_caller_identity.current.account_id
     cloudfront_enabled = var.enable_cloudfront
-    deployed_at    = timestamp()
+    deployed_at        = timestamp()
   }
 }
 

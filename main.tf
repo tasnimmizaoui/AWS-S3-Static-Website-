@@ -7,7 +7,7 @@ locals {
     CreatedBy   = "Terraform"
     #Repository  = var.repository_url
   }
-  
+
   # Content types mapping
   content_types = {
     ".html" = "text/html"
@@ -21,7 +21,7 @@ locals {
     ".svg"  = "image/svg+xml"
     ".ico"  = "image/x-icon"
   }
-  
+
   bucket_name = "${var.project_name}-${var.environment}-${random_pet.suffix.id}"
 }
 
@@ -36,7 +36,7 @@ resource "aws_s3_bucket" "website" {
 
 # Versionning for better file managment 
 resource "aws_s3_bucket_versioning" "website" {
-  bucket = aws_s3_bucket.website.id 
+  bucket = aws_s3_bucket.website.id
   versioning_configuration {
     status = var.enable_versioning ? "Enabled" : "Disabled"
   }
@@ -44,42 +44,42 @@ resource "aws_s3_bucket_versioning" "website" {
 
 # Server side encryption : 
 resource "aws_s3_bucket_server_side_encryption_configuration" "website" {
-  bucket = aws_s3_bucket.website.id 
-  rule  {
-      apply_server_side_encryption_by_default {
+  bucket = aws_s3_bucket.website.id
+  rule {
+    apply_server_side_encryption_by_default {
       sse_algorithm = "AES256"
     }
-        bucket_key_enabled = true
+    bucket_key_enabled = true
 
   }
 }
 # Lifecycle configuration for cost optimization : 
 # Old versions auto-delete after 30 days → controlled storage costs
 resource "aws_s3_bucket_lifecycle_configuration" "website" {
-  bucket = aws_s3_bucket.website.id 
-  count = var.enable_lifecycle_rules ? 1 : 0
-  rule { 
-    id = "delete_old_versions" # create a rule named delete_old_versions
-    status = "Enabled"         # sets it to active status 
+  bucket = aws_s3_bucket.website.id
+  count  = var.enable_lifecycle_rules ? 1 : 0
+  rule {
+    id     = "delete_old_versions" # create a rule named delete_old_versions
+    status = "Enabled"             # sets it to active status 
     noncurrent_version_expiration {
-    noncurrent_days = 30
+      noncurrent_days = 30
+    }
   }
-  }
-  
-  
+
+
 }
 
 # Website configuration 
 resource "aws_s3_bucket_website_configuration" "website" {
-    bucket = aws_s3_bucket.website.id
+  bucket = aws_s3_bucket.website.id
 
-    index_document {
-      suffix = var.index_document
-    }
+  index_document {
+    suffix = var.index_document
+  }
 
-    error_document {
-      key = var.error_document
-    }
+  error_document {
+    key = var.error_document
+  }
 }
 
 
@@ -95,7 +95,7 @@ resource "aws_s3_bucket_ownership_controls" "website" {
 resource "aws_s3_bucket_public_access_block" "website" {
   bucket = aws_s3_bucket.website.id
 
-  block_public_acls       = false 
+  block_public_acls       = false
   block_public_policy     = false
   ignore_public_acls      = false # Allow our public policy 
   restrict_public_buckets = false
@@ -113,7 +113,7 @@ resource "aws_s3_bucket_acl" "website" {
 
 # Bucket policy for public read 
 resource "aws_s3_bucket_policy" "public_read" {
-  bucket = aws_s3_bucket.website.id
+  bucket     = aws_s3_bucket.website.id
   depends_on = [aws_s3_bucket_public_access_block.website] # This was an addition after i encountered an error related to the public acess since terraform was trying to apply the policy before the bucket_acl configuration for public acess was done 
 
   policy = jsonencode({
@@ -124,24 +124,24 @@ resource "aws_s3_bucket_policy" "public_read" {
         Effect    = "Allow"
         Principal = "*"
         Action    = "s3:GetObject"
-        Resource  = "${aws_s3_bucket.website.arn}/*"  #path to objects inside the bucket 
+        Resource  = "${aws_s3_bucket.website.arn}/*" #path to objects inside the bucket 
       }
     ]
-  }) 
+  })
 }
 
 # Cloud Front ditribution 
 resource "aws_cloudfront_origin_access_control" "website" {
-  count = var.enable_cloudfront ? 1 : 0
-  name = "${local.bucket_name}-oac"
-  description = "OAC for ${local.bucket_name}"
+  count                             = var.enable_cloudfront ? 1 : 0
+  name                              = "${local.bucket_name}-oac"
+  description                       = "OAC for ${local.bucket_name}"
   origin_access_control_origin_type = "s3"
   signing_behavior                  = "always"
   signing_protocol                  = "sigv4"
 }
 
 resource "aws_cloudfront_distribution" "website" {
-  count               = var.enable_cloudfront ? 1 : 0
+  count = var.enable_cloudfront ? 1 : 0
   origin {
     domain_name              = aws_s3_bucket.website.bucket_regional_domain_name
     origin_access_control_id = aws_cloudfront_origin_access_control.website[0].id
@@ -197,9 +197,9 @@ resource "aws_cloudfront_distribution" "website" {
 
 # Upload website files : 
 resource "aws_s3_object" "wensite_files" {
-  for_each = fileset("${path.module}/website", "**/*")
-  bucket = aws_s3_bucket.website.id 
-  key = each.value
+  for_each     = fileset("${path.module}/website", "**/*")
+  bucket       = aws_s3_bucket.website.id
+  key          = each.value
   source       = "${path.module}/website/${each.value}"
   content_type = lookup(local.content_types, regex("\\.[^.]+$", each.value), "binary/octet-stream")
   etag         = filemd5("${path.module}/website/${each.value}")
@@ -216,18 +216,18 @@ resource "random_pet" "suffix" {
 }
 
 
- #  Monitoring and logging : 
- # User Request → Source Bucket (website) → Access Log → Target Bucket (access-logs)
+#  Monitoring and logging : 
+# User Request → Source Bucket (website) → Access Log → Target Bucket (access-logs)
 resource "aws_s3_bucket_logging" "website" {
-  count =  var.enable_access_logging ? 1 : 0
-  bucket = aws_s3_bucket.website.id
+  count         = var.enable_access_logging ? 1 : 0
+  bucket        = aws_s3_bucket.website.id
   target_bucket = aws_s3_bucket.access_logs[0].id
   target_prefix = "access-logs/"
 }
 
 resource "aws_s3_bucket" "access_logs" {
-  count = var.enable_access_logging ? 1 : 0
-  bucket = "${local.bucket_name}-access-logs"
+  count         = var.enable_access_logging ? 1 : 0
+  bucket        = "${local.bucket_name}-access-logs"
   force_destroy = var.force_destroy_bucket
 
   tags = merge(local.common_tags, {

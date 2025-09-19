@@ -1,8 +1,8 @@
 variable "aws_region" {
-    description = "AWS region to deploy into"
-    type = string
-    default = ""
-  
+  description = "AWS region to deploy into"
+  type        = string
+  default     = ""
+
 }
 
 variable "project_name" {
@@ -14,13 +14,13 @@ variable "environment" {
   description = "Environment "
   type        = string
   default     = "dev"
-  
+
 }
 variable "owner" {
   description = "The  owner of the ressources  "
   type        = string
   default     = "Devops Team "
-  
+
 }
 
 
@@ -44,34 +44,34 @@ variable "force_destroy_bucket" {
 }
 variable "enable_versioning" {
   description = "S3 bucket versionnning status"
-  type = bool
-  default = true
+  type        = bool
+  default     = true
 }
 
 variable "enable_lifecycle_rules" {
   description = "Enable S3 lifecycle rules for cost optimization"
-  type = bool
-  default = true 
-  
+  type        = bool
+  default     = true
+
 }
 # CloudFront configuration 
 variable "enable_cloudfront" {
   description = "Enable CloudFront "
-  type = bool
-  default = true 
+  type        = bool
+  default     = true
 }
 variable "cloudfront_price_class" {
-   description = " Cloudfront  price class " 
-    type        = string
-   default     = "PriceClass_100"
+  description = " Cloudfront  price class "
+  type        = string
+  default     = "PriceClass_100"
 }
 
 # Logging and monitoring 
 variable "enable_access_logging" {
   description = "Enable s3 bucket logging"
-  type = bool
+  type        = bool
 
-  
+
 }
 
 # MONITORING AND ALERTS
