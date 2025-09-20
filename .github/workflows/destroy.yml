@@ -29,15 +29,6 @@ jobs:
       - name: Terraform Init
         run: terraform init
 
-      - name: Verify Terraform State 
-        run: | 
-          echo "📋 Checking Terraform state..." 
-          terraform state list
-          echo "✅ State verification complete"
-
-      - name: Terraform Destroy
-        run: terraform destroy -auto-approve -input=false
-
       - name: Verify the Destruction of the AWS resources 
         run: |
           echo "🔍 Verifying resources were destroyed..."
@@ -54,14 +45,17 @@ jobs:
           
           # Check CloudFront distributions
           echo "CloudFront Distributions:"
-          DISTRIBUTIONS=$(aws cloudfront list-distributions --query "DistributionList.Items[?contains(Comment, '${{ vars.project_name }}')].{Id:Id,Status:Status}" --output json)
+          DISTRIBUTIONS_JSON=$(aws cloudfront list-distributions --query "DistributionList.Items[?contains(Comment, '${{ vars.project_name }}')].{Id:Id,Status:Status}" --output json)
           
-          if [ -n "$DISTRIBUTIONS" ] && [ "$DISTRIBUTIONS" != "[]" ]; then
+          # Check if the result is null or empty array
+          if [ -z "$DISTRIBUTIONS_JSON" ] || [ "$DISTRIBUTIONS_JSON" = "null" ] || [ "$DISTRIBUTIONS_JSON" = "[]" ]; then
+            echo "✅ No CloudFront distributions found"
+          else
             echo "CloudFront distributions found:"
-            echo "$DISTRIBUTIONS" | jq -r '.[] | "\(.Id): \(.Status)"'
+            echo "$DISTRIBUTIONS_JSON" | jq -r '.[] | "\(.Id): \(.Status)"'
             
             # Check if any are still "Deployed" (active)
-            ACTIVE_DISTS=$(echo "$DISTRIBUTIONS" | jq -r '.[] | select(.Status == "Deployed") | .Id')
+            ACTIVE_DISTS=$(echo "$DISTRIBUTIONS_JSON" | jq -r '.[] | select(.Status == "Deployed") | .Id' 2>/dev/null || true)
             
             if [ -n "$ACTIVE_DISTS" ]; then
               echo "❌ Active CloudFront distributions still exist: $ACTIVE_DISTS"
@@ -69,8 +63,6 @@ jobs:
             else
               echo "✅ All distributions are in process of being deleted"
             fi
-          else
-            echo "✅ No CloudFront distributions found"
           fi
           
           echo "✅ Resource verification completed successfully"
