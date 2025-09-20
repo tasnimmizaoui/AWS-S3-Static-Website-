@@ -16,7 +16,7 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with: 
-          terraform_wrapper : false 
+          terraform_wrapper: false 
           cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
 
       - name: Configure AWS credentials
@@ -26,56 +26,54 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ vars.AWS_REGION || 'eu-north-1' }}
 
-
       - name: Terraform Init
         run: terraform init
-       # working-directory: ./terraform
 
       - name: Verify Terraform State 
         run: | 
           echo "📋 Checking Terraform state..." 
           terraform state list
           echo "✅ State verification complete"
-        #working-directory: ./terraform
 
       - name: Terraform Destroy
         run: terraform destroy -auto-approve -input=false
-        #working-directory: ./terraform
 
-      - name: Verify the Distruction of the AWS resources 
+      - name: Verify the Destruction of the AWS resources 
         run: |
           echo "🔍 Verifying resources were destroyed..."
+          
           # Check S3 buckets
           echo "S3 Buckets:"
           BUCKETS=$(aws s3api list-buckets --query "Buckets[?contains(Name, '${{ vars.project_name }}')].Name" --output text)
           if [ -n "$BUCKETS" ]; then
-              echo "❌ Buckets still exist: $BUCKETS"
+            echo "❌ Buckets still exist: $BUCKETS"
+            exit 1
+          else
+            echo "✅ No S3 buckets found"
+          fi
+          
+          # Check CloudFront distributions
+          echo "CloudFront Distributions:"
+          DISTRIBUTIONS=$(aws cloudfront list-distributions --query "DistributionList.Items[?contains(Comment, '${{ vars.project_name }}')].{Id:Id,Status:Status}" --output json)
+          
+          if [ -n "$DISTRIBUTIONS" ] && [ "$DISTRIBUTIONS" != "[]" ]; then
+            echo "CloudFront distributions found:"
+            echo "$DISTRIBUTIONS" | jq -r '.[] | "\(.Id): \(.Status)"'
+            
+            # Check if any are still "Deployed" (active)
+            ACTIVE_DISTS=$(echo "$DISTRIBUTIONS" | jq -r '.[] | select(.Status == "Deployed") | .Id')
+            
+            if [ -n "$ACTIVE_DISTS" ]; then
+              echo "❌ Active CloudFront distributions still exist: $ACTIVE_DISTS"
               exit 1
             else
-              echo "✅ No S3 buckets found"
+              echo "✅ All distributions are in process of being deleted"
             fi
-            
-            # Check CloudFront distributions
-            echo "CloudFront Distributions:"
-            DISTRIBUTIONS=$(aws cloudfront list-distributions --query "DistributionList.Items[?contains(Comment, '${{ vars.project_name }}')].{Id:Id,Status:Status}" --output json)          if [ -n "$DISTRIBUTIONS" ]; then
-            if [ -n "$DISTRIBUTIONS" ] && [ "$DISTRIBUTIONS" != "[]" ]; then
-              echo "CloudFront distributions found:"
-              echo "$DISTRIBUTIONS" | jq -r '.[] | "\(.Id): \(.Status)"'
-
-              # Check if any are not "Deployed" (meaning they're being delete
-              ACTIVE_DISTS=$(echo "$DISTRIBUTIONS" | jq -r '.[] | select(.Status == "Deployed") | .Id') 
-
-              if [ -n "$ACTIVE_DISTS" ]; then
-                echo "❌ Active CloudFront distributions still exist: $ACTIVE_DISTS"
-                exit 1
-              else
-                echo "✅ All distributions are in process of being deleted"
-                exit 0  # Success - they're being deleted
-              fi
           else
-          echo "✅ No CloudFront distributions found"
-          exit 0
+            echo "✅ No CloudFront distributions found"
           fi
+          
+          echo "✅ Resource verification completed successfully"
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
