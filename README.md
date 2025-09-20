@@ -299,16 +299,12 @@ This project demonstrates modern infrastructure automation practices combining T
 
 ## 👥 Contributors
 
-- [Your Name](https://github.com/your-username)
+- [Mizaoui Tasnim](https://github.com/tasnimmizaou)
 
-## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 
 **⭐ If you found this project helpful, please give it a star on GitHub!**
 
 ---
-
-*Last updated: ${new Date().toLocaleDateString()}*
