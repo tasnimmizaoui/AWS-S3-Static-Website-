@@ -1,7 +1,7 @@
 variable "aws_region" {
   description = "AWS region to deploy into"
   type        = string
-  default     = ""
+  default = "eu-north-1"
 
 }
 
@@ -93,4 +93,11 @@ variable "enable_compression" {
   description = "Enable gzip compression for text files"
   type        = bool
   default     = true
+}
+
+
+variable "terraform_state_bucket" {
+  description = "S3 bucket name for storing Terraform state"
+  type        = string
+  default     = "your-terraform-state-bucket-name"  # Replace with your actual bucket name
 }

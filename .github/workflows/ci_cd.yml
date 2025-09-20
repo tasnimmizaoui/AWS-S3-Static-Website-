@@ -1,9 +1,6 @@
 name: Deploy the static website
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+  workflow_dispatch:
 
 # Prevent concurrent Deployments to avoid conflicts:
 concurrency:

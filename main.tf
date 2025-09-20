@@ -215,6 +215,23 @@ resource "random_pet" "suffix" {
   separator = "-"
 }
 
+/*
+# DynamoDB table for Terraform state locking
+resource "aws_dynamodb_table" "terraform_state_lock" {
+  name         = "${var.project_name}-${var.environment}-terraform-state-lock"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "LockID"
+
+  attribute {
+    name = "LockID"
+    type = "S"
+  }
+
+  tags = local.common_tags
+}
+--> This is eliminated for now since i will go for the Terraform Cloud approach 
+*/
+
 
 #  Monitoring and logging : 
 # User Request → Source Bucket (website) → Access Log → Target Bucket (access-logs)

@@ -1,4 +1,11 @@
 terraform {
+  cloud {
+    organization = "hungryheidi"  
+
+    workspaces {
+      name = "AWS-S3-Static-Website"
+    }
+  }
   required_version = ">= 1.5.0"
   required_providers {
     aws = {
@@ -9,7 +16,7 @@ terraform {
 }
 
 provider "aws" {
-  region = var.aws_region
+  region = "eu-north-1"
 }
 
 # Data sources for reusability
