@@ -21,6 +21,7 @@ jobs:
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.13.1
+          cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
 
       - name: Terraform format check
         run: terraform fmt -check -recursive
@@ -28,7 +29,10 @@ jobs:
       - name: Terraform init
         run: terraform init
         env:
-          cli_config_credentials_token : ${{ secrets.TF_API_TOKEN }}
+          # Terraform Cloud token should be passed via the setup-terraform action
+          # but we can also set it as an environment variable
+          TF_API_TOKEN: ${{ secrets.TF_API_TOKEN }}
+        
 
       - name: Terraform Validate
         run: terraform validate
@@ -39,12 +43,14 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: ${{ vars.AWS_REGION || 'eu-north-1' }}
+          TF_API_TOKEN: ${{ secrets.TF_API_TOKEN }}
 
       - name: Upload Terraform Plan
         uses: actions/upload-artifact@v4
         with:
           name: tfplan
           path: tfplan
+
 
   terraform-apply:
     name: Terraform Apply
@@ -68,6 +74,7 @@ jobs:
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.13.1
+          cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
 
       - name: Terraform init
         run: terraform init
@@ -78,6 +85,8 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: ${{ vars.AWS_REGION || 'eu-north-1' }}
+          TF_API_TOKEN: ${{ secrets.TF_API_TOKEN }}
+
 
       - name: Output website URL
         run: |
