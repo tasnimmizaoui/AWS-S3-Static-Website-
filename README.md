@@ -16,7 +16,6 @@ graph TB
         S3[S3 Bucket]
         CloudFront[CloudFront CDN]
         ACM[ACM Certificate]
-        Route53[Route53 DNS]
     end
     
     User[End User] --> CloudFront
