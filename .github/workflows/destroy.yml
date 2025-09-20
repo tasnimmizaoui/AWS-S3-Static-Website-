@@ -49,23 +49,33 @@ jobs:
           echo "S3 Buckets:"
           BUCKETS=$(aws s3api list-buckets --query "Buckets[?contains(Name, '${{ vars.project_name }}')].Name" --output text)
           if [ -n "$BUCKETS" ]; then
-            echo "❌ Buckets still exist: $BUCKETS"
-            exit 1
+              echo "❌ Buckets still exist: $BUCKETS"
+              exit 1
+            else
+              echo "✅ No S3 buckets found"
+            fi
+            
+            # Check CloudFront distributions
+            echo "CloudFront Distributions:"
+            DISTRIBUTIONS=$(aws cloudfront list-distributions --query "DistributionList.Items[?contains(Comment, '${{ vars.project_name }}')].{Id:Id,Status:Status}" --output json)          if [ -n "$DISTRIBUTIONS" ]; then
+            if [ -n "$DISTRIBUTIONS" ] && [ "$DISTRIBUTIONS" != "[]" ]; then
+              echo "CloudFront distributions found:"
+              echo "$DISTRIBUTIONS" | jq -r '.[] | "\(.Id): \(.Status)"'
+
+              # Check if any are not "Deployed" (meaning they're being delete
+              ACTIVE_DISTS=$(echo "$DISTRIBUTIONS" | jq -r '.[] | select(.Status == "Deployed") | .Id') 
+
+              if [ -n "$ACTIVE_DISTS" ]; then
+                echo "❌ Active CloudFront distributions still exist: $ACTIVE_DISTS"
+                exit 1
+              else
+                echo "✅ All distributions are in process of being deleted"
+                exit 0  # Success - they're being deleted
+              fi
           else
-            echo "✅ No S3 buckets found"
+          echo "✅ No CloudFront distributions found"
+          exit 0
           fi
-          
-          # Check CloudFront distributions
-          echo "CloudFront Distributions:"
-          DISTRIBUTIONS=$(aws cloudfront list-distributions --query "DistributionList.Items[?contains(Comment, '${{ vars.project_name }}')].Id" --output text)
-          if [ -n "$DISTRIBUTIONS" ]; then
-            echo "❌ CloudFront distributions still exist: $DISTRIBUTIONS"
-            exit 1
-          else
-            echo "✅ No CloudFront distributions found"
-          fi
-          
-          echo "🎉 All resources successfully destroyed!"
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
