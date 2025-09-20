@@ -299,7 +299,7 @@ This project demonstrates modern infrastructure automation practices combining T
 
 ## 👥 Contributors
 
-- [Mizaoui Tasnim](https://github.com/tasnimmizaou)
+- [Mizaoui Tasnim](https://github.com/tasnimmizaoui)
 
 
 
