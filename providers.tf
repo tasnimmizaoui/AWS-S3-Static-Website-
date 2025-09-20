@@ -1,6 +1,6 @@
 terraform {
   cloud {
-    organization = "hungryheidi"  
+    organization = "hungryheidi"
 
     workspaces {
       name = "AWS-S3-Static-Website"
