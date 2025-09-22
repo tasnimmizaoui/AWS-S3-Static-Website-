@@ -28,6 +28,15 @@ jobs:
 
       - name: Terraform Init
         run: terraform init
+      
+      - name: Verify Terraform State 
+        run: | 
+           echo "📋 Checking Terraform state..." 
+           terraform state list
+           echo "✅ State verification complete"
+
+      - name: Terraform Destroy
+        run: terraform destroy -auto-approve -input=false
 
       - name: Verify the Destruction of the AWS resources 
         run: |
